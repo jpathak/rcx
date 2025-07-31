@@ -15,6 +15,12 @@
         app:showAsAction="always" />
 
     <item
+        android:id="@+id/action_view_switcher"
+        android:title="@string/view_switcher"
+        android:icon="@drawable/ic_view_grid"
+        app:showAsAction="always" />
+
+    <item
         android:id="@+id/action_select_all"
         android:title="@string/select_all"
         android:icon="@drawable/ic_select_all"

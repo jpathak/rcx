@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="8dp"
+    android:background="?attr/cardColor">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?selectableItemBackground">
+
+        <!-- Thumbnail/Icon -->
+        <FrameLayout
+            android:id="@+id/thumbnail_container"
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:layout_centerHorizontal="true">
+            
+            <ImageView
+                android:id="@+id/file_icon"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/ic_file"
+                android:scaleType="centerCrop"
+                android:contentDescription="@string/file_icon" />
+                
+            <ImageView
+                android:id="@+id/dir_icon"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@drawable/ic_folder"
+                android:tint="?attr/iconTint"
+                android:layout_gravity="center"
+                android:contentDescription="@string/file_icon" />
+                
+            <!-- Selection overlay -->
+            <View
+                android:id="@+id/selection_overlay"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="?attr/colorPrimaryLight"
+                android:alpha="0.3"
+                android:visibility="gone" />
+        </FrameLayout>
+
+        <!-- File name -->
+        <TextView
+            android:id="@+id/file_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/thumbnail_container"
+            android:layout_marginTop="4dp"
+            android:textAppearance="?attr/textAppearanceListItemSmall"
+            android:textSize="12sp"
+            android:textColor="?attr/textColorPrimary"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:gravity="center"
+            tools:text="Test File.jpg"/>
+
+        <!-- Options button -->
+        <ImageButton
+            android:id="@+id/file_options"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentTop="true"
+            android:layout_margin="4dp"
+            android:padding="2dp"
+            android:background="@drawable/ic_circle"
+            android:backgroundTint="?attr/backgroundColor"
+            android:src="@drawable/ic_more_vert"
+            android:tint="?attr/iconTint"
+            android:contentDescription="@string/file_options_content_description" />
+    </RelativeLayout>
+</LinearLayout>

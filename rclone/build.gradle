@@ -18,8 +18,8 @@
 //  - ndk
 
 // Rclone version - any git reference (tag, branch, hash) should work
-def buildTag = 'v1.55.1'
-ext.ndkVersion = '22.1.7171670'
+def buildTag = 'v1.68.2'
+ext.ndkVersion = '23.1.7779620'
 
 //
 // DO NOT EDIT ANYTHING BELOW
@@ -100,13 +100,13 @@ task fetchRclone(type: Exec) {
     mkdir "gopath"
     environment 'GOPATH', goPath
     environment "GO111MODULE", "on"
-    commandLine 'go', 'get', '-d', repositoryRef
+    commandLine 'go', 'install', repositoryRef
 
     ignoreExitValue true
     errorOutput = new ByteArrayOutputStream()
     doLast {
         if (execResult.getExitValue() != 0) {
-            throw new GradleException("Error running go get: \n${errorOutput.toString()}")
+            throw new GradleException("Error running go install: \n${errorOutput.toString()}")
         }
     }
 }
@@ -132,7 +132,7 @@ task buildArm(type: Exec) {
     environment 'GOARM', '7'
     environment 'CGO_ENABLED', '1'
     environment 'CGO_LDFLAGS', "-fuse-ld=lld -s"
-    workingDir Paths.get(goPath, "pkg/mod/${repositoryRef}".split('/'))
+    workingDir Paths.get(goPath, "pkg/mod/github.com/rclone/rclone@${buildTag}")
     def artifactTarget = "${appLibPath}/armeabi-v7a/librclone.so"
     commandLine 'go', 'build', '-v', '-tags', 'android noselfupdate', '-trimpath', '-ldflags', ldflags, '-o', artifactTarget, '.'
 
@@ -155,7 +155,7 @@ task buildArm64(type: Exec) {
     environment 'GOARCH', 'arm64'
     environment 'CGO_ENABLED', '1'
     environment 'CGO_LDFLAGS', "-fuse-ld=lld -s"
-    workingDir Paths.get(goPath, "pkg/mod/${repositoryRef}".split('/'))
+    workingDir Paths.get(goPath, "pkg/mod/github.com/rclone/rclone@${buildTag}")
     def artifactTarget = "${appLibPath}/arm64-v8a/librclone.so"
     commandLine 'go', 'build', '-v', '-tags', 'android noselfupdate', '-trimpath', '-ldflags', ldflags, '-o', artifactTarget, '.'}
 
@@ -169,7 +169,7 @@ task buildx86(type: Exec) {
     environment 'GOARCH', '386'
     environment 'CGO_ENABLED', '1'
     environment 'CGO_LDFLAGS', "-fuse-ld=lld -s"
-    workingDir Paths.get(goPath, "pkg/mod/${repositoryRef}".split('/'))
+    workingDir Paths.get(goPath, "pkg/mod/github.com/rclone/rclone@${buildTag}")
     def artifactTarget = "${appLibPath}/x86/librclone.so"
     commandLine 'go', 'build', '-v', '-tags', 'android noselfupdate', '-trimpath', '-ldflags', ldflags, '-o', artifactTarget, '.'
 }
@@ -184,7 +184,7 @@ task buildx64(type: Exec) {
     environment 'GOARCH', 'amd64'
     environment 'CGO_ENABLED', '1'
     environment 'CGO_LDFLAGS', "-fuse-ld=lld -s"
-    workingDir Paths.get(goPath, "pkg/mod/${repositoryRef}".split('/'))
+    workingDir Paths.get(goPath, "pkg/mod/github.com/rclone/rclone@${buildTag}")
     def artifactTarget = "${appLibPath}/x86_64/librclone.so"
     commandLine 'go', 'build', '-v', '-tags', 'android noselfupdate', '-trimpath', '-ldflags', ldflags, '-o', artifactTarget, '.'
 }

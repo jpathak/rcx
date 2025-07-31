@@ -34,6 +34,10 @@ import java.util.List;
 public class FileExplorerRecyclerViewAdapter extends RecyclerView.Adapter<FileExplorerRecyclerViewAdapter.ViewHolder> {
 
     private static final String TAG = "FileExplorerRVA";
+    public static final int VIEW_TYPE_LIST = 0;
+    public static final int VIEW_TYPE_GRID_SMALL = 1;
+    public static final int VIEW_TYPE_GRID_LARGE = 2;
+    
     private List<FileItem> files;
     private int selectionColor;
     private View emptyView;
@@ -50,6 +54,7 @@ public class FileExplorerRecyclerViewAdapter extends RecyclerView.Adapter<FileEx
     private boolean wrapFileNames;
     private Context context;
     private long sizeLimit;
+    private int viewType = VIEW_TYPE_LIST;
 
     public interface OnClickListener {
         void onFileClicked(FileItem fileItem);
@@ -86,29 +91,55 @@ public class FileExplorerRecyclerViewAdapter extends RecyclerView.Adapter<FileEx
                         context.getResources().getInteger(R.integer.default_thumbnail_size_limit));
     }
 
+    @Override
+    public int getItemViewType(int position) {
+        return viewType;
+    }
+
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_file_explorer_item, parent, false);
-        return new ViewHolder(view);
+        View view;
+        switch (viewType) {
+            case VIEW_TYPE_GRID_SMALL:
+                view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_file_explorer_grid_item_small, parent, false);
+                break;
+            case VIEW_TYPE_GRID_LARGE:
+                view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_file_explorer_grid_item_large, parent, false);
+                break;
+            case VIEW_TYPE_LIST:
+            default:
+                view = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_file_explorer_item, parent, false);
+                break;
+        }
+        return new ViewHolder(view, viewType);
     }
 
     @Override
     public void onBindViewHolder(@NonNull final ViewHolder holder, int position) {
         final FileItem item = files.get(position);
+        int currentViewType = getItemViewType(position);
 
         holder.fileItem = item;
         if (item.isDir()) {
             holder.dirIcon.setVisibility(View.VISIBLE);
             holder.fileIcon.setVisibility(View.GONE);
-            holder.fileSize.setVisibility(View.GONE);
-            holder.interpunct.setVisibility(View.GONE);
+            if (holder.fileSize != null) {
+                holder.fileSize.setVisibility(View.GONE);
+            }
+            if (holder.interpunct != null) {
+                holder.interpunct.setVisibility(View.GONE);
+            }
         } else {
             holder.fileIcon.setVisibility(View.VISIBLE);
             holder.dirIcon.setVisibility(View.GONE);
-            holder.fileSize.setText(item.getHumanReadableSize());
-            holder.fileSize.setVisibility(View.VISIBLE);
-            holder.interpunct.setVisibility(View.VISIBLE);
+            if (holder.fileSize != null) {
+                holder.fileSize.setText(item.getHumanReadableSize());
+                holder.fileSize.setVisibility(View.VISIBLE);
+            }
+            if (holder.interpunct != null) {
+                holder.interpunct.setVisibility(View.VISIBLE);
+            }
         }
 
         if (showThumbnails && !item.isDir()) {
@@ -141,23 +172,39 @@ public class FileExplorerRecyclerViewAdapter extends RecyclerView.Adapter<FileEx
         }
 
         RemoteItem itemRemote = item.getRemote();
-        if (!itemRemote.isDirectoryModifiedTimeSupported() && item.isDir()) {
-            holder.fileModTime.setVisibility(View.GONE);
-        } else {
-            holder.fileModTime.setVisibility(View.VISIBLE);
-            holder.fileModTime.setText(item.getHumanReadableModTime());
+        if (holder.fileModTime != null) {
+            if (!itemRemote.isDirectoryModifiedTimeSupported() && item.isDir()) {
+                holder.fileModTime.setVisibility(View.GONE);
+            } else {
+                holder.fileModTime.setVisibility(View.VISIBLE);
+                holder.fileModTime.setText(item.getHumanReadableModTime());
+            }
         }
         
         holder.fileName.setText(item.getName());
 
         if (isInSelectMode) {
             if (selectedItems.contains(item)) {
-                holder.view.setBackgroundColor(selectionColor);
+                if (currentViewType == VIEW_TYPE_LIST) {
+                    holder.view.setBackgroundColor(selectionColor);
+                } else {
+                    // For grid views, show selection overlay instead of background color
+                    holder.view.setBackgroundColor(cardColor);
+                    if (holder.selectionOverlay != null) {
+                        holder.selectionOverlay.setVisibility(View.VISIBLE);
+                    }
+                }
             } else {
                 holder.view.setBackgroundColor(cardColor);
+                if (holder.selectionOverlay != null) {
+                    holder.selectionOverlay.setVisibility(View.GONE);
+                }
             }
         } else {
             holder.view.setBackgroundColor(cardColor);
+            if (holder.selectionOverlay != null) {
+                holder.selectionOverlay.setVisibility(View.GONE);
+            }
         }
 
         if (isInMoveMode) {
@@ -202,11 +249,13 @@ public class FileExplorerRecyclerViewAdapter extends RecyclerView.Adapter<FileEx
             return true;
         });
 
-        holder.icons.setOnClickListener(v -> {
-            if (!isInMoveMode && canSelect) {
-                onLongClickAction(item, holder);
-            }
-        });
+        if (holder.icons != null) {
+            holder.icons.setOnClickListener(v -> {
+                if (!isInMoveMode && canSelect) {
+                    onLongClickAction(item, holder);
+                }
+            });
+        }
     }
 
     private void bindSafFile(@NonNull ViewHolder holder, FileItem item, RequestOptions glideOption) {
@@ -384,6 +433,15 @@ public class FileExplorerRecyclerViewAdapter extends RecyclerView.Adapter<FileEx
         refreshData();
     }
 
+    public void setViewType(int viewType) {
+        this.viewType = viewType;
+        notifyDataSetChanged();
+    }
+
+    public int getViewType() {
+        return viewType;
+    }
+
     private void showEmptyState(Boolean show) {
         if (isInSearchMode) {
             if (show) {
@@ -465,19 +523,27 @@ public class FileExplorerRecyclerViewAdapter extends RecyclerView.Adapter<FileEx
         public final TextView fileSize;
         public final TextView interpunct;
         public final ImageButton fileOptions;
+        public final View selectionOverlay;
         public FileItem fileItem;
+        public final int viewType;
 
-        ViewHolder(View itemView) {
+        ViewHolder(View itemView, int viewType) {
             super(itemView);
             this.view = itemView;
-            this.icons = view.findViewById(R.id.icons);
+            this.viewType = viewType;
+            
+            // Common elements present in all layouts
             this.fileIcon = view.findViewById(R.id.file_icon);
             this.dirIcon = view.findViewById(R.id.dir_icon);
             this.fileName = view.findViewById(R.id.file_name);
+            this.fileOptions = view.findViewById(R.id.file_options);
+            
+            // Elements that may not exist in grid layouts
+            this.icons = view.findViewById(R.id.icons);
             this.fileModTime = view.findViewById(R.id.file_modtime);
             this.fileSize = view.findViewById(R.id.file_size);
-            this.fileOptions = view.findViewById(R.id.file_options);
             this.interpunct = view.findViewById(R.id.interpunct);
+            this.selectionOverlay = view.findViewById(R.id.selection_overlay);
         }
     }
 }
